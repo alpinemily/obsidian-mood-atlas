@@ -1,36 +1,38 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "./main";
+import { App, PluginSettingTab, Setting } from 'obsidian';
+import MoodAtlasPlugin from './main';
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface MoodAtlasSettings {
+	// Reserved for future settings (e.g. custom trigger char, insert format)
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+export const DEFAULT_SETTINGS: MoodAtlasSettings = {};
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class MoodAtlasSettingTab extends PluginSettingTab {
+	plugin: MoodAtlasPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: MoodAtlasPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
-
+		const { containerEl } = this;
 		containerEl.empty();
 
+		containerEl.createEl('h2', { text: 'Mood Atlas' });
+
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
+			.setName('Trigger character')
+			.setDesc('Type this character after an emotion word to open the feelings wheel. Default: ^')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+				.setPlaceholder('^')
+				.setValue('^')
+				.setDisabled(true));
+
+		containerEl.createEl('p', {
+			text: 'Type any emotion from the feelings wheel followed by ^ to see finer-grained emotions. ' +
+				'Example: "happy^" shows all emotions under Happy; "lonely^" shows Isolated and Abandoned.',
+			cls: 'setting-item-description',
+		});
 	}
 }

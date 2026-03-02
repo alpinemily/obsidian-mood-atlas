@@ -1,8 +1,35 @@
-/*
+/* Mood Atlas — emotion suggestion dropdown */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.mood-atlas-suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 2px 0;
+}
 
-If your plugin does not need CSS, delete this file.
+.mood-atlas-label {
+    font-weight: 500;
+}
 
-*/
+/* Single footer appended after all suggestion items */
+.mood-atlas-footer {
+    font-size: 0.78em;
+    opacity: 0.5;
+    padding: 4px 8px 2px;
+    /* Span all columns when in grid mode */
+    grid-column: 1 / -1;
+}
+
+/* Grid layout when there are more than 5 suggestions */
+.mood-atlas-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    padding: 6px;
+    width: max-content;
+    max-width: 480px;
+}
+
+.mood-atlas-grid .suggestion-item {
+    border-radius: 4px;
+}
