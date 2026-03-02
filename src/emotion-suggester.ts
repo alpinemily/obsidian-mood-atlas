@@ -108,9 +108,10 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		const line = editor.getLine(cursor.line);
 		const beforeCursor = line.substring(0, cursor.ch);
 
-		if (!beforeCursor.endsWith('^')) return null;
+		const trigger = this.plugin.settings.triggerChar;
+		if (!beforeCursor.endsWith(trigger)) return null;
 
-		const textBefore = beforeCursor.slice(0, -1); // strip the '^'
+		const textBefore = beforeCursor.slice(0, -trigger.length); // strip the trigger
 		const words = textBefore.trimEnd().split(/\s+/).filter(Boolean);
 
 		if (words.length === 0) return null;

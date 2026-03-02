@@ -8,11 +8,13 @@ export type WordList = 'hoffman' | 'nvc';
 export interface MoodAtlasSettings {
 	wordList: WordList;
 	customWords: Record<WordList, Record<string, string[]>>;
+	triggerChar: string;
 }
 
 export const DEFAULT_SETTINGS: MoodAtlasSettings = {
 	wordList: 'hoffman',
 	customWords: { hoffman: {}, nvc: {} },
+	triggerChar: '^',
 };
 
 const BASE_LISTS: Record<WordList, Record<string, string[]>> = {
@@ -33,6 +35,19 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h2', { text: 'Mood Atlas' });
+
+		new Setting(containerEl)
+			.setName('Trigger key')
+			.setDesc('Character to type after an emotion word to open suggestions.')
+			.addText(text => {
+				text.inputEl.maxLength = 1;
+				text.setValue(this.plugin.settings.triggerChar);
+				text.onChange(async (value) => {
+					if (!value) return;
+					this.plugin.settings.triggerChar = value;
+					await this.plugin.saveSettings();
+				});
+			});
 
 		const LIST_DESCS: Record<WordList, string> = {
 			hoffman: 'A broad emotion wheel with 18 regions drawn from the Hoffman Process.',
@@ -55,7 +70,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				}));
 
 		containerEl.createEl('p', {
-			text: 'Type any emotion followed by ^ to see all emotions in the same region.',
+			text: `Type any emotion followed by ${this.plugin.settings.triggerChar} to see all emotions in the same region.`,
 			cls: 'setting-item-description',
 		});
 
