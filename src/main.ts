@@ -4,12 +4,13 @@ import { MoodAtlasSettings, DEFAULT_SETTINGS, MoodAtlasSettingTab } from './sett
 
 export default class MoodAtlasPlugin extends Plugin {
 	settings: MoodAtlasSettings;
+	suggester: EmotionSuggester;
 
 	async onload() {
 		await this.loadSettings();
 
-		// Register the emotion suggester — fires when the user types ^ after an emotion
-		this.registerEditorSuggest(new EmotionSuggester(this.app, this));
+		this.suggester = new EmotionSuggester(this.app, this);
+		this.registerEditorSuggest(this.suggester);
 
 		this.addSettingTab(new MoodAtlasSettingTab(this.app, this));
 	}
@@ -17,7 +18,13 @@ export default class MoodAtlasPlugin extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MoodAtlasSettings>);
+		const saved = await this.loadData() as Partial<MoodAtlasSettings>;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+		// Ensure customWords has entries for both lists (handles upgrades from older saves)
+		this.settings.customWords = {
+			hoffman: this.settings.customWords?.hoffman ?? {},
+			nvc: this.settings.customWords?.nvc ?? {},
+		};
 	}
 
 	async saveSettings() {

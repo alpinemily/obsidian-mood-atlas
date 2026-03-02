@@ -15,26 +15,33 @@ import hoffmanList from './emotions/hoffman.json';
 type TwoLayerList = Record<string, string[]>;
 
 export interface EmotionSuggestion {
-	label: string;  // The emotion to insert
-	path: string;   // Emotional region context, e.g. "Joyful"
+	label: string;  // The emotion to insert (always first-letter capitalised)
+	path: string;   // Emotional region, e.g. "Joyful"
+}
+
+const BASE_DATA: Record<string, TwoLayerList> = {
+	'hoffman': hoffmanList as TwoLayerList,
+	'nvc': nvcList as TwoLayerList,
+};
+
+function capitalize(s: string): string {
+	return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 /**
  * Build an inverted lookup: lowercase emotion word → all siblings in its region.
- *
- * Structure of the JSON files:
- *   { "Region": ["Emotion1", "Emotion2", ...], ... }
- *
- * Each region's suggestion array is built once and shared by reference across
- * all its emotion keys, so memory stays flat despite the inverted index.
+ * Custom word overrides per region are applied before building.
+ * Labels are always stored with the first letter capitalised.
  *
  * If an emotion appears in multiple regions, the last region wins.
  */
-function buildEmotionLookup(data: TwoLayerList): Map<string, EmotionSuggestion[]> {
+function buildLookup(wordList: string, customWords: Record<string, string[]>): Map<string, EmotionSuggestion[]> {
+	const data = BASE_DATA[wordList] ?? {};
 	const lookup = new Map<string, EmotionSuggestion[]>();
 
-	for (const [region, emotions] of Object.entries(data)) {
-		const suggestions = emotions.map(e => ({ label: e, path: region }));
+	for (const [region, defaultEmotions] of Object.entries(data)) {
+		const emotions = customWords[region] ?? defaultEmotions;
+		const suggestions = emotions.map(e => ({ label: capitalize(e), path: region }));
 		for (const emotion of emotions) {
 			lookup.set(emotion.toLowerCase(), suggestions);
 		}
@@ -43,20 +50,15 @@ function buildEmotionLookup(data: TwoLayerList): Map<string, EmotionSuggestion[]
 	return lookup;
 }
 
-const LOOKUPS: Record<string, Map<string, EmotionSuggestion[]>> = {
-	'hoffman': buildEmotionLookup(hoffmanList as TwoLayerList),
-	'nvc': buildEmotionLookup(nvcList as TwoLayerList),
-};
-
 /**
  * Mirror the casing of `query` onto `label`.
- *   "happy"    → "playful"   (all lowercase)
- *   "Happy"    → "Playful"   (first-letter capitalised — label is already this from JSON)
- *   "HAPPY"    → "PLAYFUL"   (all caps)
+ *   "happy"  → "calm"   (all lowercase)
+ *   "Happy"  → "Calm"   (first-letter capitalised — label is already stored this way)
+ *   "HAPPY"  → "CALM"   (all caps)
  */
 function matchCase(query: string, label: string): string {
 	if (query === query.toUpperCase()) return label.toUpperCase();
-	if (query[0] !== undefined && query[0] === query[0].toUpperCase()) return label; // JSON labels are already title-cased
+	if (query[0] !== undefined && query[0] === query[0].toUpperCase()) return label;
 	return label.toLowerCase();
 }
 
@@ -67,6 +69,7 @@ const WIDER_GRID_THRESHOLD = 28;
 export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 
 	private plugin: MoodAtlasPlugin;
+	private _lookup: Map<string, EmotionSuggestion[]>;
 	private suggestionCount = 0;
 	private renderIndex = 0;
 	private parentLabel = '';
@@ -74,10 +77,20 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 	constructor(app: App, plugin: MoodAtlasPlugin) {
 		super(app);
 		this.plugin = plugin;
+		this._lookup = this.buildCurrentLookup();
+	}
+
+	rebuildLookup(): void {
+		this._lookup = this.buildCurrentLookup();
+	}
+
+	private buildCurrentLookup(): Map<string, EmotionSuggestion[]> {
+		const { wordList, customWords } = this.plugin.settings;
+		return buildLookup(wordList, customWords[wordList] ?? {});
 	}
 
 	private get lookup(): Map<string, EmotionSuggestion[]> {
-		return LOOKUPS[this.plugin.settings.wordList] ?? LOOKUPS['hoffman']!;
+		return this._lookup;
 	}
 
 	/**
@@ -144,7 +157,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		if (this.renderIndex === this.suggestionCount && this.parentLabel) {
 			el.parentElement?.createEl('div', {
 				cls: 'mood-atlas-footer',
-				text: `Emotional Region: ${this.parentLabel}`,
+				text: `Emotion Region: ${this.parentLabel}`,
 			});
 		}
 	}

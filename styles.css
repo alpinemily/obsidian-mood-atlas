@@ -52,3 +52,17 @@
 .mood-atlas-grid .suggestion-item {
     border-radius: 4px;
 }
+
+/* Pin label column width so all region textareas are the same width */
+.mood-atlas-region-setting .setting-item-info {
+    flex: 0 0 200px;
+}
+
+.mood-atlas-region-setting .setting-item-control {
+    flex: 1 1 auto;
+}
+
+.mood-atlas-region-setting textarea {
+    width: 100%;
+}
+
