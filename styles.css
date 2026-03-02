@@ -30,6 +30,25 @@
     max-width: 480px;
 }
 
+/* 4-column grid when there are more than 18 suggestions */
+.mood-atlas-grid.mood-atlas-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 640px;
+}
+
+/* 5-column grid when there are more than 28 suggestions */
+.mood-atlas-grid.mood-atlas-grid-5 {
+    grid-template-columns: repeat(5, max-content);
+    max-width: none;
+}
+
+/* Widen the Obsidian popup container so it doesn't clip the 5-column grid */
+.mood-atlas-popup-wide {
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+}
+
 .mood-atlas-grid .suggestion-item {
     border-radius: 4px;
 }

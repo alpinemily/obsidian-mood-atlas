@@ -9,7 +9,7 @@ export default class MoodAtlasPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Register the emotion suggester — fires when the user types ^ after an emotion
-		this.registerEditorSuggest(new EmotionSuggester(this.app));
+		this.registerEditorSuggest(new EmotionSuggester(this.app, this));
 
 		this.addSettingTab(new MoodAtlasSettingTab(this.app, this));
 	}

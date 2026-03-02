@@ -1,4 +1,5 @@
 import {
+	App,
 	Editor,
 	EditorPosition,
 	EditorSuggest,
@@ -6,54 +7,46 @@ import {
 	EditorSuggestTriggerInfo,
 	TFile,
 } from 'obsidian';
+import type MoodAtlasPlugin from './main';
 
-// Import the feelings wheel JSON as our source of truth
-import feelingsWheel from './emotions/feelings-wheel.json';
+import nvcList from './emotions/nvc.json';
+import hoffmanList from './emotions/hoffman.json';
 
-type FeelingsWheel = Record<string, Record<string, string[]>>;
+type TwoLayerList = Record<string, string[]>;
 
 export interface EmotionSuggestion {
 	label: string;  // The emotion to insert
-	path: string;   // Breadcrumb context, e.g. "Happy > Playful"
+	path: string;   // Emotional region context, e.g. "Joyful"
 }
 
 /**
- * Build a flat lookup: lowercase emotion word → list of finer-grained suggestions.
+ * Build an inverted lookup: lowercase emotion word → all siblings in its region.
  *
- * Structure of feelings-wheel.json:
- *   { Primary: { Secondary: [Tertiary, ...], ... }, ... }
+ * Structure of the JSON files:
+ *   { "Region": ["Emotion1", "Emotion2", ...], ... }
  *
- * Lookup entries created:
- *   "happy"   → secondary children of Happy  (Playful, Content, ...)
- *   "playful" → tertiary children of Playful (Aroused, Cheeky)
- *   "lonely"  → tertiary children of Lonely  (Isolated, Abandoned)
+ * Each region's suggestion array is built once and shared by reference across
+ * all its emotion keys, so memory stays flat despite the inverted index.
  *
- * Tertiary (leaf) emotions are NOT added — there's nothing to drill into.
+ * If an emotion appears in multiple regions, the last region wins.
  */
-function buildEmotionLookup(): Map<string, EmotionSuggestion[]> {
+function buildEmotionLookup(data: TwoLayerList): Map<string, EmotionSuggestion[]> {
 	const lookup = new Map<string, EmotionSuggestion[]>();
-	const wheel = feelingsWheel as FeelingsWheel;
 
-	for (const [primary, secondaries] of Object.entries(wheel)) {
-		// primary → its secondary children
-		lookup.set(
-			primary.toLowerCase(),
-			Object.keys(secondaries).map(s => ({ label: s, path: primary }))
-		);
-
-		// secondary → its tertiary children
-		for (const [secondary, tertiaries] of Object.entries(secondaries)) {
-			lookup.set(
-				secondary.toLowerCase(),
-				tertiaries.map(t => ({ label: t, path: `${primary} > ${secondary}` }))
-			);
+	for (const [region, emotions] of Object.entries(data)) {
+		const suggestions = emotions.map(e => ({ label: e, path: region }));
+		for (const emotion of emotions) {
+			lookup.set(emotion.toLowerCase(), suggestions);
 		}
 	}
 
 	return lookup;
 }
 
-const EMOTION_LOOKUP = buildEmotionLookup();
+const LOOKUPS: Record<string, Map<string, EmotionSuggestion[]>> = {
+	'hoffman': buildEmotionLookup(hoffmanList as TwoLayerList),
+	'nvc': buildEmotionLookup(nvcList as TwoLayerList),
+};
 
 /**
  * Mirror the casing of `query` onto `label`.
@@ -68,19 +61,31 @@ function matchCase(query: string, label: string): string {
 }
 
 const GRID_THRESHOLD = 5;
+const WIDE_GRID_THRESHOLD = 18;
+const WIDER_GRID_THRESHOLD = 28;
 
 export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 
+	private plugin: MoodAtlasPlugin;
 	private suggestionCount = 0;
 	private renderIndex = 0;
 	private parentLabel = '';
+
+	constructor(app: App, plugin: MoodAtlasPlugin) {
+		super(app);
+		this.plugin = plugin;
+	}
+
+	private get lookup(): Map<string, EmotionSuggestion[]> {
+		return LOOKUPS[this.plugin.settings.wordList] ?? LOOKUPS['hoffman']!;
+	}
 
 	/**
 	 * Called on every keypress. Return trigger info when the cursor is right
 	 * after "emotion^", otherwise return null.
 	 *
-	 * Supports multi-word emotions (e.g. "Let down") by trying up to 3-word
-	 * phrases, longest match first.
+	 * Supports multi-word emotions (e.g. "Open Hearted", "Burnt Out") by
+	 * trying up to 3-word phrases, longest match first.
 	 */
 	onTrigger(
 		cursor: EditorPosition,
@@ -97,10 +102,10 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 
 		if (words.length === 0) return null;
 
-		// Try longest phrase first so "let down" beats "down"
+		// Try longest phrase first so "Stressed / Tense" beats "Tense"
 		for (let n = Math.min(3, words.length); n >= 1; n--) {
 			const phrase = words.slice(-n).join(' ');
-			if (EMOTION_LOOKUP.has(phrase.toLowerCase())) {
+			if (this.lookup.has(phrase.toLowerCase())) {
 				return {
 					start: { line: cursor.line, ch: cursor.ch - 1 - phrase.length },
 					end: cursor,
@@ -113,22 +118,23 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 	}
 
 	getSuggestions(context: EditorSuggestContext): EmotionSuggestion[] {
-		const suggestions = EMOTION_LOOKUP.get(context.query.toLowerCase()) ?? [];
+		const suggestions = this.lookup.get(context.query.toLowerCase()) ?? [];
 		this.suggestionCount = suggestions.length;
 		this.renderIndex = 0;
-
-		// Parent label only exists for tertiary suggestions (path = "Primary > Secondary").
-		// Typing a primary emotion gives path = "Primary" (no ">") → no subtext.
-		const firstPath = suggestions[0]?.path ?? '';
-		const gtIndex = firstPath.indexOf(' > ');
-		this.parentLabel = gtIndex !== -1 ? firstPath.substring(0, gtIndex) : '';
+		this.parentLabel = suggestions[0]?.path ?? '';
 
 		return suggestions;
 	}
 
 	renderSuggestion(suggestion: EmotionSuggestion, el: HTMLElement): void {
 		const isGrid = this.suggestionCount > GRID_THRESHOLD;
+		const isWideGrid = this.suggestionCount > WIDE_GRID_THRESHOLD;
+		const isWiderGrid = this.suggestionCount > WIDER_GRID_THRESHOLD;
 		el.parentElement?.toggleClass('mood-atlas-grid', isGrid);
+		el.parentElement?.toggleClass('mood-atlas-grid-4', isWideGrid);
+		el.parentElement?.toggleClass('mood-atlas-grid-5', isWiderGrid);
+		// Also widen the popup container so it doesn't clip the 5-column grid
+		el.parentElement?.parentElement?.toggleClass('mood-atlas-popup-wide', isWiderGrid);
 
 		el.createDiv({ cls: 'mood-atlas-suggestion' })
 			.createSpan({ cls: 'mood-atlas-label', text: suggestion.label });
@@ -138,7 +144,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		if (this.renderIndex === this.suggestionCount && this.parentLabel) {
 			el.parentElement?.createEl('div', {
 				cls: 'mood-atlas-footer',
-				text: `parent word: ${this.parentLabel}`,
+				text: `Emotional Region: ${this.parentLabel}`,
 			});
 		}
 	}

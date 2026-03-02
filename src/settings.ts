@@ -1,11 +1,15 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import MoodAtlasPlugin from './main';
 
+export type WordList = 'hoffman' | 'nvc';
+
 export interface MoodAtlasSettings {
-	// Reserved for future settings (e.g. custom trigger char, insert format)
+	wordList: WordList;
 }
 
-export const DEFAULT_SETTINGS: MoodAtlasSettings = {};
+export const DEFAULT_SETTINGS: MoodAtlasSettings = {
+	wordList: 'hoffman',
+};
 
 export class MoodAtlasSettingTab extends PluginSettingTab {
 	plugin: MoodAtlasPlugin;
@@ -22,16 +26,20 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 		containerEl.createEl('h2', { text: 'Mood Atlas' });
 
 		new Setting(containerEl)
-			.setName('Trigger character')
-			.setDesc('Type this character after an emotion word to open the feelings wheel. Default: ^')
-			.addText(text => text
-				.setPlaceholder('^')
-				.setValue('^')
-				.setDisabled(true));
+			.setName('Emotion word list')
+			.setDesc('Which list of emotions to use for suggestions.')
+			.addDropdown(drop => drop
+				.addOption('hoffman', 'Hoffman List')
+				.addOption('nvc', 'NVC List')
+				.setValue(this.plugin.settings.wordList)
+				.onChange(async (value) => {
+					this.plugin.settings.wordList = value as WordList;
+					await this.plugin.saveSettings();
+				}));
 
 		containerEl.createEl('p', {
-			text: 'Type any emotion from the feelings wheel followed by ^ to see finer-grained emotions. ' +
-				'Example: "happy^" shows all emotions under Happy; "lonely^" shows Isolated and Abandoned.',
+			text: 'Type any emotional region followed by ^ to see finer-grained emotions. ' +
+				'Example: "Joyful^" shows all emotions under Joyful.',
 			cls: 'setting-item-description',
 		});
 	}
