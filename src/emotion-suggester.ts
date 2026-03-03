@@ -11,6 +11,7 @@ import type MoodAtlasPlugin from './main';
 
 import nvcList from './emotions/nvc.json';
 import hoffmanList from './emotions/hoffman.json';
+import comboList from './emotions/hoffman-nvc-combo.json';
 
 type TwoLayerList = Record<string, string[]>;
 
@@ -20,6 +21,7 @@ export interface EmotionSuggestion {
 }
 
 const BASE_DATA: Record<string, TwoLayerList> = {
+	'combo': comboList as TwoLayerList,
 	'hoffman': hoffmanList as TwoLayerList,
 	'nvc': nvcList as TwoLayerList,
 };
@@ -43,7 +45,9 @@ function buildLookup(wordList: string, customWords: Record<string, string[]>): M
 		const emotions = customWords[region] ?? defaultEmotions;
 		const suggestions = emotions.map(e => ({ label: capitalize(e), path: region }));
 		for (const emotion of emotions) {
-			lookup.set(emotion.toLowerCase(), suggestions);
+			if (!lookup.has(emotion.toLowerCase())) {
+				lookup.set(emotion.toLowerCase(), suggestions);
+			}
 		}
 	}
 
