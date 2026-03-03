@@ -31,22 +31,25 @@ function capitalize(s: string): string {
 }
 
 /**
- * Build an inverted lookup: lowercase emotion word → all siblings in its region.
+ * Build an inverted lookup: lowercase emotion word → one group of siblings per region.
+ * A word that appears in multiple regions produces multiple groups.
  * Custom word overrides per region are applied before building.
  * Labels are always stored with the first letter capitalised.
- *
- * If an emotion appears in multiple regions, the last region wins.
  */
-function buildLookup(wordList: string, customWords: Record<string, string[]>): Map<string, EmotionSuggestion[]> {
+function buildLookup(wordList: string, customWords: Record<string, string[]>): Map<string, EmotionSuggestion[][]> {
 	const data = BASE_DATA[wordList] ?? {};
-	const lookup = new Map<string, EmotionSuggestion[]>();
+	const lookup = new Map<string, EmotionSuggestion[][]>();
 
 	for (const [region, defaultEmotions] of Object.entries(data)) {
 		const emotions = customWords[region] ?? defaultEmotions;
 		const suggestions = emotions.map(e => ({ label: capitalize(e), path: region }));
 		for (const emotion of emotions) {
-			if (!lookup.has(emotion.toLowerCase())) {
-				lookup.set(emotion.toLowerCase(), suggestions);
+			const key = emotion.toLowerCase();
+			const existing = lookup.get(key);
+			if (existing) {
+				existing.push(suggestions);
+			} else {
+				lookup.set(key, [suggestions]);
 			}
 		}
 	}
@@ -73,10 +76,12 @@ const WIDER_GRID_THRESHOLD = 28;
 export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 
 	private plugin: MoodAtlasPlugin;
-	private _lookup: Map<string, EmotionSuggestion[]>;
+	private _lookup: Map<string, EmotionSuggestion[][]>;
 	private suggestionCount = 0;
 	private renderIndex = 0;
-	private parentLabel = '';
+	private groupStarts: number[] = [];
+	private groupEnds: number[] = [];
+	private groupLabels: string[] = [];
 
 	constructor(app: App, plugin: MoodAtlasPlugin) {
 		super(app);
@@ -88,12 +93,12 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		this._lookup = this.buildCurrentLookup();
 	}
 
-	private buildCurrentLookup(): Map<string, EmotionSuggestion[]> {
+	private buildCurrentLookup(): Map<string, EmotionSuggestion[][]> {
 		const { wordList, customWords } = this.plugin.settings;
 		return buildLookup(wordList, customWords[wordList] ?? {});
 	}
 
-	private get lookup(): Map<string, EmotionSuggestion[]> {
+	private get lookup(): Map<string, EmotionSuggestion[][]> {
 		return this._lookup;
 	}
 
@@ -136,12 +141,21 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 	}
 
 	getSuggestions(context: EditorSuggestContext): EmotionSuggestion[] {
-		const suggestions = this.lookup.get(context.query.toLowerCase()) ?? [];
-		this.suggestionCount = suggestions.length;
+		const groups = this.lookup.get(context.query.toLowerCase()) ?? [];
+		const flat = groups.flat();
+		this.suggestionCount = flat.length;
 		this.renderIndex = 0;
-		this.parentLabel = suggestions[0]?.path ?? '';
-
-		return suggestions;
+		this.groupStarts = [];
+		this.groupEnds = [];
+		this.groupLabels = [];
+		let count = 0;
+		for (const group of groups) {
+			this.groupStarts.push(count);
+			count += group.length;
+			this.groupEnds.push(count);
+			this.groupLabels.push(group[0]?.path ?? '');
+		}
+		return flat;
 	}
 
 	renderSuggestion(suggestion: EmotionSuggestion, el: HTMLElement): void {
@@ -154,16 +168,33 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		// Also widen the popup container so it doesn't clip the 5-column grid
 		el.parentElement?.parentElement?.toggleClass('mood-atlas-popup-wide', isWiderGrid);
 
+		const isMultiGroup = this.groupLabels.length > 1;
+
+		// Multi-group: insert region label as a header ABOVE the first item of each group
+		if (isMultiGroup) {
+			const groupIdx = this.groupStarts.indexOf(this.renderIndex);
+			if (groupIdx !== -1 && this.groupLabels[groupIdx] && el.parentElement) {
+				const header = el.parentElement.createEl('div', {
+					cls: 'mood-atlas-footer',
+					text: `Emotion Region: ${this.groupLabels[groupIdx]}`,
+				});
+				el.parentElement.insertBefore(header, el);
+			}
+		}
+
 		el.createDiv({ cls: 'mood-atlas-suggestion' })
 			.createSpan({ cls: 'mood-atlas-label', text: suggestion.label });
 
-		// After the last item, append a single footer showing the parent context
+		// Single group: append region footer below the last item (original behaviour)
 		this.renderIndex++;
-		if (this.renderIndex === this.suggestionCount && this.parentLabel) {
-			el.parentElement?.createEl('div', {
-				cls: 'mood-atlas-footer',
-				text: `Emotion Region: ${this.parentLabel}`,
-			});
+		if (!isMultiGroup) {
+			const groupIdx = this.groupEnds.indexOf(this.renderIndex);
+			if (groupIdx !== -1 && this.groupLabels[groupIdx]) {
+				el.parentElement?.createEl('div', {
+					cls: 'mood-atlas-footer',
+					text: `Emotion Region: ${this.groupLabels[groupIdx]}`,
+				});
+			}
 		}
 	}
 
