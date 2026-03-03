@@ -1,10 +1,10 @@
 {
 	"id": "obsidian-mood-atlas",
 	"name": "Mood Atlas",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
+	"version": "0.1.0",
+	"minAppVersion": "1.0.0",
 	"description": "Expand your emotional vocabulary beyond 'happy' or 'sad' with inline emotion suggestions as you journal.",
 	"author": "Emily Bei Cheng",
-	"authorUrl": "https://alpinemily.com/about",
+	"authorUrl": "https://github.com/alpinemily",
 	"isDesktopOnly": false
 }
