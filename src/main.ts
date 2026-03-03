@@ -20,12 +20,6 @@ export default class MoodAtlasPlugin extends Plugin {
 	async loadSettings() {
 		const saved = await this.loadData() as Partial<MoodAtlasSettings>;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
-		// Ensure customWords has entries for both lists (handles upgrades from older saves)
-		this.settings.customWords = {
-			combo: this.settings.customWords?.combo ?? {},
-			hoffman: this.settings.customWords?.hoffman ?? {},
-			nvc: this.settings.customWords?.nvc ?? {},
-		};
 	}
 
 	async saveSettings() {

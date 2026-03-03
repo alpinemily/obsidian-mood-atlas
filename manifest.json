@@ -3,8 +3,8 @@
 	"name": "Mood Atlas",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Improve emotional literacy while journaling. Type an emotion followed by ^ to explore finer-grained feelings from the feelings wheel.",
-	"author": "emilybeicheng",
-	"authorUrl": "",
+	"description": "Expand your emotional vocabulary beyond 'happy' or 'sad' with inline emotion suggestions as you journal.",
+	"author": "Emily Bei Cheng",
+	"authorUrl": "https://alpinemily.com/about",
 	"isDesktopOnly": false
 }

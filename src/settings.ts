@@ -4,21 +4,21 @@ import hoffmanList from './emotions/hoffman.json';
 import nvcList from './emotions/nvc.json';
 import comboList from './emotions/hoffman-nvc-combo.json';
 
-export type WordList = 'combo' | 'hoffman' | 'nvc';
+export type EmotionDatasourceName = 'combo' | 'hoffman' | 'nvc';
 
 export interface MoodAtlasSettings {
-	wordList: WordList;
-	customWords: Record<WordList, Record<string, string[]>>;
+	datasourceName: EmotionDatasourceName;
+	customUserEmotions: Record<EmotionDatasourceName, Record<string, string[]>>;
 	triggerChar: string;
 }
 
 export const DEFAULT_SETTINGS: MoodAtlasSettings = {
-	wordList: 'combo',
-	customWords: { combo: {}, hoffman: {}, nvc: {} },
+	datasourceName: 'combo',
+	customUserEmotions: { combo: {}, hoffman: {}, nvc: {} },
 	triggerChar: '^',
 };
 
-const BASE_LISTS: Record<WordList, Record<string, string[]>> = {
+const BASE_LISTS: Record<EmotionDatasourceName, Record<string, string[]>> = {
 	combo: comboList as Record<string, string[]>,
 	hoffman: hoffmanList as Record<string, string[]>,
 	nvc: nvcList as Record<string, string[]>,
@@ -51,23 +51,23 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				});
 			});
 
-		const LIST_DESCS: Record<WordList, string> = {
-			combo: 'All emotions from Hoffman and NVC merged into one list.',
-			hoffman: 'A broad emotion wheel with 18 regions drawn from the Hoffman Process.',
-			nvc: 'Feelings from Nonviolent Communication by Marshall Rosenberg, organised around needs.',
+		const LIST_DESCS: Record<EmotionDatasourceName, string> = {
+			combo: 'All emotions from Hoffman and NVC merged into one list, plus a few more.',
+			hoffman: 'A list of emotions used by the Hoffman Institute.',
+			nvc: 'A list of emotions from the book Nonviolent Communication by Marshall Rosenberg.',
 		};
 
 		const listSetting = new Setting(containerEl)
-			.setName('Emotion word list')
-			.setDesc(LIST_DESCS[this.plugin.settings.wordList])
+			.setName('Emotion Data Source')
+			.setDesc(LIST_DESCS[this.plugin.settings.datasourceName])
 			.addDropdown(drop => drop
-				.addOption('combo', 'Hoffman + NVC Combined')
+				.addOption('combo', 'Hoffman/NVC Combined')
 				.addOption('hoffman', 'Hoffman Emotions')
 				.addOption('nvc', 'NVC Emotions')
-				.setValue(this.plugin.settings.wordList)
+				.setValue(this.plugin.settings.datasourceName)
 				.onChange(async (value) => {
-					this.plugin.settings.wordList = value as WordList;
-					listSetting.setDesc(LIST_DESCS[value as WordList]);
+					this.plugin.settings.datasourceName = value as EmotionDatasourceName;
+					listSetting.setDesc(LIST_DESCS[value as EmotionDatasourceName]);
 					await this.plugin.saveSettings();
 					this.plugin.suggester.rebuildLookup();
 					this.display();
@@ -84,16 +84,16 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 			cls: 'setting-item-description',
 		});
 
-		const wordList = this.plugin.settings.wordList;
-		const customWords = this.plugin.settings.customWords[wordList];
+		const datasourceName = this.plugin.settings.datasourceName;
+		const customUserEmotions = this.plugin.settings.customUserEmotions[datasourceName];
 
 		const autoResize = (el: HTMLTextAreaElement) => {
 			el.style.height = 'auto';
 			el.style.height = el.scrollHeight + 'px';
 		};
 
-		for (const [region, defaultEmotions] of Object.entries(BASE_LISTS[wordList])) {
-			const currentWords = customWords[region] ?? defaultEmotions;
+		for (const [region, defaultEmotions] of Object.entries(BASE_LISTS[datasourceName])) {
+			const currentEmotions = customUserEmotions[region] ?? defaultEmotions;
 
 			const setting = new Setting(containerEl)
 				.then(s => s.settingEl.addClass('mood-atlas-region-setting'))
@@ -101,7 +101,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				.addTextArea(text => {
 					text.inputEl.style.resize = 'none';
 					text.inputEl.style.overflow = 'hidden';
-					text.setValue(currentWords.join(', '));
+					text.setValue(currentEmotions.join(', '));
 					setTimeout(() => autoResize(text.inputEl), 0);
 					text.inputEl.addEventListener('blur', () => {
 						const normalized = text.getValue()
@@ -121,9 +121,9 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 							.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
 						if (words.length === 0) {
-							delete customWords[region];
+							delete customUserEmotions[region];
 						} else {
-							customWords[region] = words;
+							customUserEmotions[region] = words;
 						}
 
 						await this.plugin.saveSettings();

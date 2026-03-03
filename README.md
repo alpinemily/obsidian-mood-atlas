@@ -1,17 +1,12 @@
 # Mood Atlas
 
-Mood Atlas is an [Obsidian](https://obsidian.md) plugin that improves emotional literacy. While journaling, type any emotion word followed by a trigger key to see all the feelings in the same emotional region - helping you find the most precise word for what you're experiencing.
+Mood Atlas is an [Obsidian](https://obsidian.md) plugin that expands your emotional vocabulary as you journal. Type any emotion word followed by a trigger key to pull up all the feeling words in the same emotional region - helping you find the most precise word for what you're experiencing.
 
 ## How it works
 
 Type an emotion word, then press `^` (configurable). A dropdown appears showing all emotions in the same region, so you can choose the one that fits best.
 
-```
-I've been feeling happy^ → shows: Amused, Delighted, Glad, Happy, Joyful, Jubilant, Pleased, Tickled
-                                   Emotion Region: Joyful
-```
-
-TODO: Include a gif here
+![Demo](assets/mood-atlas-demo.gif)
 
 
 ## Emotion word lists
@@ -20,7 +15,7 @@ The following three lists are available to choose from, and each can be customiz
 
 | List | Description |
 |------|-------------|
-| **Hoffman + NVC Combined** *(default)* | All emotions from both lists merged into one, plus a few more. |
+| **Hoffman/NVC Combined** *(default)* | All emotions from both lists merged into one, plus a few more. |
 | **Hoffman Emotions** | Feelings list used by the Hoffman Institute. [Source](https://www.hoffmaninstitute.org/wp-content/uploads/Practices-FeelingsSensations.pdf) |
 | **NVC Emotions** | Feelings list from the book [Nonviolent Communication](https://www.cnvc.org) by Marshall Rosenberg |
 
