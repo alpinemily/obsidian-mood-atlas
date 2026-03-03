@@ -53,7 +53,7 @@
     border-radius: 4px;
 }
 
-/* Pin label column width so all region textareas are the same width */
+/* Pin label column width so all emotion text areas in settings are the same width */
 .mood-atlas-region-setting .setting-item-info {
     flex: 0 0 200px;
 }
