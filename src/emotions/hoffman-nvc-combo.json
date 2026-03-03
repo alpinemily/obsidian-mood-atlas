@@ -53,7 +53,7 @@
     "Satisfied",
     "Surprised",
     "Thrilled",
-    "Vibrant",
+    "Vibrant"
   ],
   "Angry / Annoyed": [
     "Agitated",
@@ -84,7 +84,7 @@
     "Livid",
     "Mad",
     "Moody",
-    "On edge",
+    "On Edge",
     "Outraged",
     "Pissed",
     "Resentful",
@@ -288,8 +288,7 @@
     "Incapable",
     "Powerless",
     "Resigned",
-    "Trapped",
-    "Victim"
+    "Trapped"
   ],
   "Tender": [
     "Calm",
@@ -323,7 +322,7 @@
     "Tight",
     "Tired",
     "Weary",
-    "Worn out"
+    "Worn Out"
   ],
   "Unsettled / Doubt": [
     "Apprehensive",

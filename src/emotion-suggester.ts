@@ -9,21 +9,19 @@ import {
 } from 'obsidian';
 import type MoodAtlasPlugin from './main';
 
-import nvcList from './emotions/nvc.json';
-import hoffmanList from './emotions/hoffman.json';
 import comboList from './emotions/hoffman-nvc-combo.json';
-
-type TwoLayerList = Record<string, string[]>;
+import hoffmanList from './emotions/hoffman.json';
+import nvcList from './emotions/nvc.json';
 
 export interface EmotionSuggestion {
-	label: string;  // The emotion to insert (always first-letter capitalised)
-	path: string;   // Emotional region, e.g. "Joyful"
+	emotion: string;
+	emotionRegion: string;
 }
 
-const BASE_DATA: Record<string, TwoLayerList> = {
-	'combo': comboList as TwoLayerList,
-	'hoffman': hoffmanList as TwoLayerList,
-	'nvc': nvcList as TwoLayerList,
+const DEFAULT_EMOTION_DATA: Record<string, Record<string, string[]>> = {
+	'combo': comboList as Record<string, string[]>,
+	'hoffman': hoffmanList as Record<string, string[]>,
+	'nvc': nvcList as Record<string, string[]>,
 };
 
 function capitalize(s: string): string {
@@ -37,12 +35,12 @@ function capitalize(s: string): string {
  * Labels are always stored with the first letter capitalised.
  */
 function buildLookup(wordList: string, customWords: Record<string, string[]>): Map<string, EmotionSuggestion[][]> {
-	const data = BASE_DATA[wordList] ?? {};
+	const data = DEFAULT_EMOTION_DATA[wordList] ?? {};
 	const lookup = new Map<string, EmotionSuggestion[][]>();
 
 	for (const [region, defaultEmotions] of Object.entries(data)) {
 		const emotions = customWords[region] ?? defaultEmotions;
-		const suggestions = emotions.map(e => ({ label: capitalize(e), path: region }));
+		const suggestions = emotions.map(e => ({ emotion: capitalize(e), emotionRegion: region }));
 		for (const emotion of emotions) {
 			const key = emotion.toLowerCase();
 			const existing = lookup.get(key);
@@ -102,39 +100,41 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		return this._lookup;
 	}
 
-	/**
-	 * Called on every keypress. Return trigger info when the cursor is right
-	 * after "emotion^", otherwise return null.
-	 *
-	 * Supports multi-word emotions (e.g. "Open Hearted", "Burnt Out") by
-	 * trying up to 3-word phrases, longest match first.
-	 */
 	onTrigger(
 		cursor: EditorPosition,
 		editor: Editor,
 		_file: TFile | null
 	): EditorSuggestTriggerInfo | null {
 		const line = editor.getLine(cursor.line);
-		const beforeCursor = line.substring(0, cursor.ch);
-
 		const trigger = this.plugin.settings.triggerChar;
-		if (!beforeCursor.endsWith(trigger)) return null;
 
-		const textBefore = beforeCursor.slice(0, -trigger.length); // strip the trigger
-		const words = textBefore.trimEnd().split(/\s+/).filter(Boolean);
+		if (line[cursor.ch - 1] !== trigger || cursor.ch < 2 || line[cursor.ch - 2] === ' ') return null;
 
-		if (words.length === 0) return null;
+		let i = cursor.ch - 1;
 
-		// Try longest phrase first so "Stressed / Tense" beats "Tense"
-		for (let n = Math.min(3, words.length); n >= 1; n--) {
-			const phrase = words.slice(-n).join(' ');
-			if (this.lookup.has(phrase.toLowerCase())) {
-				return {
-					start: { line: cursor.line, ch: cursor.ch - 1 - phrase.length },
-					end: cursor,
-					query: phrase,
-				};
+		// Extract the last word in the line (loop marginially faster than regex)
+		const lastWordEnd = i;
+		while (i > 0 && line[i - 1] !== ' ') i--;
+		const lastWordStart = i;
+		const lastWord = line.substring(lastWordStart, lastWordEnd);
+
+		// Check for two word emotions first (e.g. "Burned Out", "Shut Down")
+		if (lastWordStart > 0) {
+			let j = lastWordStart;
+			while (j > 0 && line[j - 1] === ' ') j--;
+			if (j > 0) {
+				const prevWordEnd = j;
+				while (j > 0 && line[j - 1] !== ' ') j--;
+				const twoWord = line.substring(j, prevWordEnd) + ' ' + lastWord;
+				if (this.lookup.has(twoWord.toLowerCase())) {
+					return { start: { line: cursor.line, ch: j }, end: cursor, query: twoWord };
+				}
 			}
+		}
+
+		// Fall back to single word emotions
+		if (this.lookup.has(lastWord.toLowerCase())) {
+			return { start: { line: cursor.line, ch: lastWordStart }, end: cursor, query: lastWord };
 		}
 
 		return null;
@@ -153,7 +153,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 			this.groupStarts.push(count);
 			count += group.length;
 			this.groupEnds.push(count);
-			this.groupLabels.push(group[0]?.path ?? '');
+			this.groupLabels.push(group[0]?.emotionRegion ?? '');
 		}
 		return flat;
 	}
@@ -183,7 +183,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		}
 
 		el.createDiv({ cls: 'mood-atlas-suggestion' })
-			.createSpan({ cls: 'mood-atlas-label', text: suggestion.label });
+			.createSpan({ cls: 'mood-atlas-label', text: suggestion.emotion });
 
 		// Single group: append region footer below the last item (original behaviour)
 		this.renderIndex++;
@@ -205,6 +205,6 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		const { context } = this;
 		if (!context) return;
 
-		context.editor.replaceRange(matchCase(context.query, suggestion.label), context.start, context.end);
+		context.editor.replaceRange(matchCase(context.query, suggestion.emotion), context.start, context.end);
 	}
 }
