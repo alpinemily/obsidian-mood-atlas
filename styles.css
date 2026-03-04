@@ -5,11 +5,9 @@
     gap: 1px;
     padding: 2px 0;
 }
-
 .mood-atlas-emotion {
     font-weight: 500;
 }
-
 /* Single footer appended after all suggestion items */
 .mood-atlas-footer {
     font-size: 0.78em;
@@ -18,7 +16,6 @@
     /* Span all columns when in grid mode */
     grid-column: 1 / -1;
 }
-
 /* Grid layout for emotion suggestions. Auto-fill + minmax lets CSS pick the column count based
    on available width, so words don't clip and number of columns decreases on narrow screens. */
 .mood-atlas-grid {
@@ -28,37 +25,51 @@
     padding: 6px;
     width: min(480px, 92vw);
 }
-
 /* Wider popup for more suggestions — auto-fill fills the extra space with more columns */
 .mood-atlas-grid.mood-atlas-grid-4 {
     width: min(640px, 92vw);
 }
-
 .mood-atlas-grid.mood-atlas-grid-5 {
     width: min(800px, 92vw);
 }
-
-/* Widen the Obsidian popup container to match, but never exceed the viewport */
+/* Widen the popup container to match, but never exceed the viewport */
 .mood-atlas-popup-wide {
     width: max-content !important;
     max-width: 92vw !important;
     overflow: visible !important;
 }
-
 .mood-atlas-grid .suggestion-item {
     border-radius: 4px;
 }
 
-/* Pin label column width so all emotion text areas in settings are the same width */
+.mood-atlas-region-setting {
+    container-type: inline-size;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 8px;
+}
+.mood-atlas-region-setting:last-of-type {
+    border-bottom: none;
+}
 .mood-atlas-region-setting .setting-item-info {
-    flex: 0 0 200px;
+    flex: 1 1 100%;
+    align-self: flex-start;
+    min-width: 0;
 }
-
 .mood-atlas-region-setting .setting-item-control {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
 }
-
 .mood-atlas-region-setting textarea {
     width: 100%;
+    transition: height 0.1s ease;
 }
 
+/* Wide panel where the emotion region label is to the left, and the text area to the right */
+@container (min-width: 500px) {
+    .mood-atlas-region-setting .setting-item-info {
+        flex: 0 0 200px;
+    }
+    .mood-atlas-region-setting .setting-item-control {
+        flex: 1 1 auto;
+    }
+}
