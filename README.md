@@ -16,7 +16,7 @@ The following three lists are available to choose from, and each can be customiz
 | List | Description |
 |------|-------------|
 | **Hoffman/NVC Combined** *(default)* | All emotions from both lists merged into one, plus a few more. |
-| **Hoffman Emotions** | Feelings list used by the Hoffman Institute. [Source](https://www.hoffmaninstitute.org/wp-content/uploads/Practices-FeelingsSensations.pdf) |
+| **Hoffman Emotions** | Feelings list used by the Hoffman Institute ([Source](https://www.hoffmaninstitute.org/wp-content/uploads/Practices-FeelingsSensations.pdf)) |
 | **NVC Emotions** | Feelings list from the book [Nonviolent Communication](https://www.cnvc.org) by Marshall Rosenberg |
 
 
@@ -29,6 +29,6 @@ Search for "Mood Atlas" in Settings → Community plugins.
 ### Manual install
 
 1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release
-2. Copy them to `<your vault>/.obsidian/plugins/obsidian-mood-atlas/`
+2. Copy them to `<your vault>/.obsidian/plugins/mood-atlas/`
 3. Reload Obsidian and enable the plugin in Settings → Community plugins
 

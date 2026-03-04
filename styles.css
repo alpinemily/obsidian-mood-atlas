@@ -61,6 +61,8 @@
 }
 .mood-atlas-region-setting textarea {
     width: 100%;
+    resize: none;
+    overflow: hidden;
     transition: height 0.1s ease;
 }
 

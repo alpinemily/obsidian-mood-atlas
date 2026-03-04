@@ -36,13 +36,6 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Mood Atlas' });
-
-		const triggerDesc = containerEl.createEl('p', {
-			text: `Type any emotion followed by ${this.plugin.settings.triggerChar} to see all emotions in the same region.`,
-			cls: 'setting-item-description',
-		});
-
 		new Setting(containerEl)
 			.setName('Trigger key')
 			.setDesc('Character to type after an emotion word to open suggestions.')
@@ -54,14 +47,12 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 						const def = DEFAULT_SETTINGS.triggerChar;
 						text.setValue(def);
 						this.plugin.settings.triggerChar = def;
-						triggerDesc.setText(`Type any emotion followed by ${def} to see all emotions in the same region.`);
 						await this.plugin.saveSettings();
 					}
 				});
 				text.onChange(async (value) => {
 					if (!value) return;
 					this.plugin.settings.triggerChar = value;
-					triggerDesc.setText(`Type any emotion followed by ${value} to see all emotions in the same region.`);
 					await this.plugin.saveSettings();
 				});
 			});
@@ -88,7 +79,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 					this.display();
 				}));
 
-		containerEl.createEl('h3', { text: 'Customize emotion words' });
+		new Setting(containerEl).setName('Customize emotion words').setHeading();
 		containerEl.createEl('p', {
 			text: 'Customize the emotions in each region by adding, removing, or editing entries. Separate emotions with commas. Clear a region to restore its default list.',
 			cls: 'setting-item-description',
@@ -113,8 +104,6 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				.then(s => s.settingEl.addClass('mood-atlas-region-setting'))
 				.setName(region)
 				.addTextArea(text => {
-					text.inputEl.style.resize = 'none';
-					text.inputEl.style.overflow = 'hidden';
 					text.setValue(currentEmotions.join(', '));
 					setTimeout(() => autoResize(text.inputEl), 0);
 					text.inputEl.addEventListener('blur', () => {
