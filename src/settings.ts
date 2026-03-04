@@ -38,15 +38,30 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h2', { text: 'Mood Atlas' });
 
+		const triggerDesc = containerEl.createEl('p', {
+			text: `Type any emotion followed by ${this.plugin.settings.triggerChar} to see all emotions in the same region.`,
+			cls: 'setting-item-description',
+		});
+
 		new Setting(containerEl)
 			.setName('Trigger key')
 			.setDesc('Character to type after an emotion word to open suggestions.')
 			.addText(text => {
 				text.inputEl.maxLength = 1;
 				text.setValue(this.plugin.settings.triggerChar);
+				text.inputEl.addEventListener('blur', async () => {
+					if (!text.getValue().trim()) {
+						const def = DEFAULT_SETTINGS.triggerChar;
+						text.setValue(def);
+						this.plugin.settings.triggerChar = def;
+						triggerDesc.setText(`Type any emotion followed by ${def} to see all emotions in the same region.`);
+						await this.plugin.saveSettings();
+					}
+				});
 				text.onChange(async (value) => {
 					if (!value) return;
 					this.plugin.settings.triggerChar = value;
+					triggerDesc.setText(`Type any emotion followed by ${value} to see all emotions in the same region.`);
 					await this.plugin.saveSettings();
 				});
 			});
@@ -54,7 +69,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 		const LIST_DESCS: Record<EmotionDatasourceName, string> = {
 			combo: 'All emotions from Hoffman and NVC merged into one list, plus a few more.',
 			hoffman: 'A list of emotions used by the Hoffman Institute.',
-			nvc: 'A list of emotions from the book Nonviolent Communication by Marshall Rosenberg.',
+			nvc: 'A list of emotions from the book Nonviolent Communication.',
 		};
 
 		const listSetting = new Setting(containerEl)
@@ -73,19 +88,18 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 					this.display();
 				}));
 
-		containerEl.createEl('p', {
-			text: `Type any emotion followed by ${this.plugin.settings.triggerChar} to see all emotions in the same region.`,
-			cls: 'setting-item-description',
-		});
-
 		containerEl.createEl('h3', { text: 'Customize emotion words' });
 		containerEl.createEl('p', {
-			text: 'Edit the words in each region. Separate entries with commas. Clear a region to restore its defaults.',
+			text: 'Customize the emotions in each region by adding, removing, or editing entries. Separate emotions with commas. Clear a region to restore its default list.',
 			cls: 'setting-item-description',
 		});
 
 		const datasourceName = this.plugin.settings.datasourceName;
 		const customUserEmotions = this.plugin.settings.customUserEmotions[datasourceName];
+
+		const capitalizeEmotionString = (value: string): string[] =>
+			value.split(',').map(s => s.trim()).filter(Boolean)
+				.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
 		const autoResize = (el: HTMLTextAreaElement) => {
 			el.style.height = 'auto';
@@ -104,21 +118,12 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 					text.setValue(currentEmotions.join(', '));
 					setTimeout(() => autoResize(text.inputEl), 0);
 					text.inputEl.addEventListener('blur', () => {
-						const normalized = text.getValue()
-							.split(',')
-							.map(s => s.trim())
-							.filter(Boolean)
-							.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-							.join(', ');
-						text.setValue(normalized);
+						const words = capitalizeEmotionString(text.getValue());
+						text.setValue(words.length ? words.join(', ') : defaultEmotions.join(', '));
 						autoResize(text.inputEl);
 					});
 					text.onChange(async (value) => {
-						const words = value
-							.split(',')
-							.map(s => s.trim())
-							.filter(Boolean)
-							.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+						const words = capitalizeEmotionString(value);
 
 						if (words.length === 0) {
 							delete customUserEmotions[region];
