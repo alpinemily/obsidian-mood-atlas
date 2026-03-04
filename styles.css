@@ -63,6 +63,7 @@
     width: 100%;
     resize: none;
     overflow: hidden;
+    height: var(--ta-height);
     transition: height 0.1s ease;
 }
 

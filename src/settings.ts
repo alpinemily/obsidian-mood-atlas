@@ -42,12 +42,12 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 			.addText(text => {
 				text.inputEl.maxLength = 1;
 				text.setValue(this.plugin.settings.triggerChar);
-				text.inputEl.addEventListener('blur', async () => {
+				text.inputEl.addEventListener('blur', () => {
 					if (!text.getValue().trim()) {
 						const def = DEFAULT_SETTINGS.triggerChar;
 						text.setValue(def);
 						this.plugin.settings.triggerChar = def;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					}
 				});
 				text.onChange(async (value) => {
@@ -64,12 +64,12 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 		};
 
 		const listSetting = new Setting(containerEl)
-			.setName('Emotion Data Source')
+			.setName('Emotion data source')
 			.setDesc(LIST_DESCS[this.plugin.settings.datasourceName])
 			.addDropdown(drop => drop
-				.addOption('combo', 'Hoffman/NVC Combined')
-				.addOption('hoffman', 'Hoffman Emotions')
-				.addOption('nvc', 'NVC Emotions')
+				.addOption('combo', 'Hoffman/NVC combined')
+				.addOption('hoffman', 'Hoffman emotions')
+				.addOption('nvc', 'NVC emotions')
 				.setValue(this.plugin.settings.datasourceName)
 				.onChange(async (value) => {
 					this.plugin.settings.datasourceName = value as EmotionDatasourceName;
@@ -81,7 +81,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName('Customize emotion words').setHeading();
 		containerEl.createEl('p', {
-			text: 'Customize the emotions in each region by adding, removing, or editing entries. Separate emotions with commas. Clear a region to restore its default list.',
+			text: 'Customize the emotions in each region by adding or removing entries. Separate each emotion with a comma. Clear a region to restore its default list.',
 			cls: 'setting-item-description',
 		});
 
@@ -93,14 +93,14 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
 		const autoResize = (el: HTMLTextAreaElement) => {
-			el.style.height = 'auto';
-			el.style.height = el.scrollHeight + 'px';
+			el.setCssProps({ '--ta-height': 'auto' });
+			el.setCssProps({ '--ta-height': el.scrollHeight + 'px' });
 		};
 
 		for (const [region, defaultEmotions] of Object.entries(BASE_LISTS[datasourceName])) {
 			const currentEmotions = customUserEmotions[region] ?? defaultEmotions;
 
-			const setting = new Setting(containerEl)
+			new Setting(containerEl)
 				.then(s => s.settingEl.addClass('mood-atlas-region-setting'))
 				.setName(region)
 				.addTextArea(text => {
