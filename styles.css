@@ -1,5 +1,4 @@
 /* Mood Atlas — emotion suggestion dropdown */
-
 .mood-atlas-suggestion {
     display: flex;
     flex-direction: column;
@@ -20,32 +19,29 @@
     grid-column: 1 / -1;
 }
 
-/* Grid layout when there are more than 5 suggestions */
+/* Grid layout for emotion suggestions. Auto-fill + minmax lets CSS pick the column count based
+   on available width, so words don't clip and number of columns decreases on narrow screens. */
 .mood-atlas-grid {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 2px;
     padding: 6px;
-    width: max-content;
-    max-width: 480px;
+    width: min(480px, 92vw);
 }
 
-/* 4-column grid when there are more than 18 suggestions */
+/* Wider popup for more suggestions — auto-fill fills the extra space with more columns */
 .mood-atlas-grid.mood-atlas-grid-4 {
-    grid-template-columns: repeat(4, 1fr);
-    max-width: 640px;
+    width: min(640px, 92vw);
 }
 
-/* 5-column grid when there are more than 28 suggestions */
 .mood-atlas-grid.mood-atlas-grid-5 {
-    grid-template-columns: repeat(5, max-content);
-    max-width: none;
+    width: min(800px, 92vw);
 }
 
-/* Widen the Obsidian popup container so it doesn't clip the 5-column grid */
+/* Widen the Obsidian popup container to match, but never exceed the viewport */
 .mood-atlas-popup-wide {
     width: max-content !important;
-    max-width: none !important;
+    max-width: 92vw !important;
     overflow: visible !important;
 }
 
