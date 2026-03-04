@@ -29,6 +29,6 @@ Search for "Mood Atlas" in Settings → Community plugins.
 ### Manual install
 
 1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release
-2. Copy them to `<your vault>/.obsidian/plugins/mood-atlas/`
+2. Copy them to `<your vault>/.obsidian/plugins/obsidian-mood-atlas/`
 3. Reload Obsidian and enable the plugin in Settings → Community plugins
 
