@@ -7,6 +7,9 @@ PLUGIN_FILES=("main.js" "manifest.json" "styles.css")
 # Prompt for vault path
 read -rp "Enter the path to your Obsidian vault: " VAULT_PATH
 
+# Strip backslash-escapes (e.g. "Obsidian\ Vault" -> "Obsidian Vault")
+VAULT_PATH="${VAULT_PATH//\\ / }"
+
 # Expand ~ if present
 VAULT_PATH="${VAULT_PATH/#\~/$HOME}"
 
