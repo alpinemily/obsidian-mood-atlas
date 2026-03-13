@@ -1,7 +1,7 @@
 {
 	"id": "mood-atlas",
 	"name": "Mood Atlas",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"minAppVersion": "1.0.0",
 	"description": "Expand your emotional vocabulary beyond 'happy' and 'sad' with inline emotion suggestions as you journal.",
 	"author": "Emily Bei Cheng",
