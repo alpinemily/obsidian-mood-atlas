@@ -22,13 +22,9 @@ The following three lists are available to choose from, and each can be customiz
 
 ## Installation
 
-### From Obsidian community plugins (TBD)
-
-Search for "Mood Atlas" in Settings → Community plugins.
-
 ### Manual install
 
-1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release
+1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release (right sidebar under "Releases")
 2. Copy them to `<your vault>/.obsidian/plugins/mood-atlas/`
 3. Reload Obsidian and enable the plugin in Settings → Community plugins
 
