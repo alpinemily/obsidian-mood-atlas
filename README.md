@@ -22,6 +22,10 @@ The following three lists are available to choose from, and each can be customiz
 
 ## Installation
 
+### Obsidian Community Plugins
+
+[Visit the Mood Atlas plugin page](https://community.obsidian.md/plugins/mood-atlas)
+
 ### Manual install
 
 1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release (right sidebar under "Releases")
