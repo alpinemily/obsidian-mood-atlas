@@ -18,8 +18,8 @@
 }
 /* Grid layout for emotion suggestions. Auto-fill + minmax lets CSS pick the column count based
    on available width, so words don't clip and number of columns decreases on narrow screens. */
-.mood-atlas-grid {
-    display: grid !important;
+.mood-atlas-grid.mood-atlas-grid {
+    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 2px;
     padding: 6px;
@@ -33,10 +33,10 @@
     width: min(800px, 92vw);
 }
 /* Widen the popup container to match, but never exceed the viewport */
-.mood-atlas-popup-wide {
-    width: max-content !important;
-    max-width: 92vw !important;
-    overflow: visible !important;
+.mood-atlas-popup-wide.mood-atlas-popup-wide {
+    width: max-content;
+    max-width: 92vw;
+    overflow: visible;
 }
 .mood-atlas-grid .suggestion-item {
     border-radius: 4px;
