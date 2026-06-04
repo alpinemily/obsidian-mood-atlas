@@ -105,7 +105,7 @@ export class MoodAtlasSettingTab extends PluginSettingTab {
 				.setName(region)
 				.addTextArea(text => {
 					text.setValue(currentEmotions.join(', '));
-					setTimeout(() => autoResize(text.inputEl), 0);
+					activeWindow.setTimeout(() => autoResize(text.inputEl), 0);
 					text.inputEl.addEventListener('blur', () => {
 						const words = capitalizeEmotionString(text.getValue());
 						text.setValue(words.length ? words.join(', ') : defaultEmotions.join(', '));

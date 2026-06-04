@@ -16,7 +16,7 @@ interface ScopeWithKeys extends Scope {
 }
 
 /** Obsidian's internal SuggestManager shape used by PopoverSuggest. */
-interface SuggestManager<T> {
+interface SuggestManager<_T> {
 	selectedItem: number;
 	setSelectedItem(index: number, evt: KeyboardEvent | MouseEvent): void;
 }
@@ -241,7 +241,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		if (isMultiGroup) {
 			const groupIdx = this.groupStarts.indexOf(this.renderIndex);
 			if (groupIdx !== -1 && this.emotionRegionLabels[groupIdx] && el.parentElement) {
-				const header = el.parentElement.createEl('div', {
+				const header = el.parentElement.createDiv({
 					cls: 'mood-atlas-footer',
 					text: `Emotion Region: ${this.emotionRegionLabels[groupIdx]}`,
 				});
@@ -259,7 +259,7 @@ export class EmotionSuggester extends EditorSuggest<EmotionSuggestion> {
 		if (!isMultiGroup) {
 			const groupIdx = this.groupEnds.indexOf(this.renderIndex);
 			if (groupIdx !== -1 && this.emotionRegionLabels[groupIdx]) {
-				el.parentElement?.createEl('div', {
+				el.parentElement?.createDiv({
 					cls: 'mood-atlas-footer',
 					text: `Emotion Region: ${this.emotionRegionLabels[groupIdx]}`,
 				});
